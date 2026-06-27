@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veggie Code Finder</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #10b981;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 2rem 1rem; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 500px; }
+        
+        .search-wrapper { 
+            position: sticky; top: 1rem; z-index: 10; background-color: var(--bg-color); 
+            padding-bottom: 1rem; display: flex; gap: 0.5rem;
+        }
+        
+        input[type="text"] { 
+            width: 100%; padding: 1rem 1.5rem; font-size: 1.2rem; border: 2px solid #334155; 
+            border-radius: 12px; background-color: var(--card-bg); color: var(--text-main); outline: none; 
+        }
+        input[type="text"]:focus { border-color: var(--accent); }
+        
+        #clearBtn { 
+            padding: 0 1rem; background-color: var(--card-bg); border: 2px solid #334155; 
+            color: var(--danger); border-radius: 12px; cursor: pointer; font-weight: bold; display: none;
+        }
+        
+        .results { display: flex; flex-direction: column; gap: 0.8rem; }
+        .item-card { background-color: var(--card-bg); padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; border-right: 4px solid var(--accent); }
+        .item-number { font-size: 2rem; font-weight: bold; color: var(--accent); text-align: right; }
+        .item-details { text-align: left; }
+        .item-name { font-size: 1.2rem; font-weight: 600; }
+        .item-tags { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+        .no-results { text-align: center; color: var(--text-muted); margin-top: 2rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="Search..." autocomplete="off" autofocus>
+            <button id="clearBtn">Clear</button>
+        </div>
+        <div class="results" id="resultsContainer"></div>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        function renderResults(query = "") {
+            resultsContainer.innerHTML = "";
+            const lowerQuery = query.toLowerCase().trim();
+            
+            // Toggle clear button visibility
+            clearBtn.style.display = lowerQuery.length > 0 ? "block" : "none";
+
+            let filtered = vegetableData.filter(item => {
+                if (!lowerQuery) return true;
+                return item.no.includes(lowerQuery) || 
+                       item.name.includes(lowerQuery) || 
+                       item.tags.some(tag => tag.toLowerCase().includes(lowerQuery));
+            });
+
+            if (lowerQuery.length > 0) {
+                filtered.sort((a, b) => a.name.localeCompare(b.name, 'si-LK'));
+            }
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">No results found.</div>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-details">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-tags">${item.tags.slice(0, 3).join(', ')}</div>
+                    </div>
+                    <div class="item-number">${item.no}</div>
+                `;
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        searchInput.addEventListener('input', (e) => renderResults(e.target.value));
+        
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = "";
+            renderResults("");
+            searchInput.focus(); // Keep focus on input after clearing
+        });
+
+        renderResults();
+    </script>
+</body>
+</html>

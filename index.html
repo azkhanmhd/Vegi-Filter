@@ -62,7 +62,6 @@
             resultsContainer.innerHTML = "";
             const lowerQuery = query.toLowerCase().trim();
             
-            // Toggle clear button visibility
             clearBtn.style.display = lowerQuery.length > 0 ? "block" : "none";
 
             let filtered = vegetableData.filter(item => {
@@ -73,7 +72,16 @@
             });
 
             if (lowerQuery.length > 0) {
-                filtered.sort((a, b) => a.name.localeCompare(b.name, 'si-LK'));
+                filtered.sort((a, b) => {
+                    // Priority: If it starts with the query, boost it to the top
+                    const aStarts = a.name.startsWith(query) || a.tags.some(t => t.startsWith(lowerQuery));
+                    const bStarts = b.name.startsWith(query) || b.tags.some(t => t.startsWith(lowerQuery));
+                    
+                    if (aStarts && !bStarts) return -1;
+                    if (!aStarts && bStarts) return 1;
+                    
+                    return a.name.localeCompare(b.name, 'si-LK');
+                });
             }
 
             if (filtered.length === 0) {
@@ -100,7 +108,7 @@
         clearBtn.addEventListener('click', () => {
             searchInput.value = "";
             renderResults("");
-            searchInput.focus(); // Keep focus on input after clearing
+            searchInput.focus();
         });
 
         renderResults();
